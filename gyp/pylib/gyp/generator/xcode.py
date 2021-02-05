@@ -80,6 +80,7 @@ generator_additional_non_configuration_keys = [
     "mac_xctest_bundle",
     "mac_xcuitest_bundle",
     "xcode_create_dependents_test_runner",
+    "capabilities",
 ]
 
 # We want to let any rules apply to files that are resources also.
@@ -1319,6 +1320,30 @@ exit 1
                 }
             )
             xct.AppendProperty("buildPhases", ssbp)
+
+        # Capabilities
+        capabilities = spec.get("capabilities", {})
+        in_app_purchase = capabilities.get("in_app_purchase", 0)
+        push_notification = capabilities.get("push_notification", 0)
+
+        if in_app_purchase or push_notification:
+            attributes_ = pbxp._properties["attributes"]
+            if attributes_.get("TargetAttributes") is None:
+                attributes_["TargetAttributes"] = {}
+            if attributes_["TargetAttributes"][xct] is None:
+                attributes_["TargetAttributes"][xct] = {}
+            if attributes_["TargetAttributes"][xct]["SystemCapabilities"] is None:
+                attributes_["TargetAttributes"][xct]["SystemCapabilities"] = {}
+
+            capabilities_ = attributes_["TargetAttributes"][xct]["SystemCapabilities"]
+            if in_app_purchase:
+                capabilities_["com.apple.InAppPurchase"] = {
+                    "enabled": 1,
+                }
+            if push_notification:
+                capabilities_["com.apple.Push"] = {
+                    "enabled": 1,
+                }
 
         # Add dependencies before libraries, because adding a dependency may imply
         # adding a library.  It's preferable to keep dependencies listed first
